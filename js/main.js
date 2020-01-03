@@ -16,9 +16,8 @@ var config = {
 	        update: update,
 	        extend: {
 	                    player: null,
-	                    lapelota: null,
 	                    healthpoints: null,
-	                    reticle: null,
+	                    elcursor: null,
 	                    moveKeys: null,
 	                    playerBullets: null,
 	                    time: 0,
@@ -26,11 +25,10 @@ var config = {
         }
     };
     var game = new Phaser.Game(config);
-    var Bullet = new Phaser.Class({
+    var Pelota = new Phaser.Class({
     Extends: Phaser.GameObjects.Image,
     initialize:
-    function Bullet (scene)
-    {
+    function Pelota (scene){
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'pelota');
         this.speed = 1;
         this.born = 0;
@@ -39,29 +37,24 @@ var config = {
         this.ySpeed = 0;
         this.setSize(12, 12, true);
     },
-    fire: function (shooter, target)
-    {
-        this.setPosition(shooter.x, shooter.y); // Initial position
-        this.direction = Math.atan( (target.x-this.x) / (target.y-this.y));
-        if (target.y >= this.y)
-        {
+    lanza: function (disparo, cursor){
+        this.setPosition(disparo.x, disparo.y); 
+        this.direction = Math.atan( (cursor.x-this.x) / (cursor.y-this.y));
+        if (cursor.y >= this.y){
             this.xSpeed = this.speed*Math.sin(this.direction);
             this.ySpeed = this.speed*Math.cos(this.direction);
-        }
-        else
-        {
+        }else{
             this.xSpeed = -this.speed*Math.sin(this.direction);
             this.ySpeed = -this.speed*Math.cos(this.direction);
         }
-
-        this.rotation = shooter.rotation;
+        this.rotation = disparo.rotation;
         this.born = 0;
     },
-    update: function (time, delta)
-    {
+    update: function (time, delta){
         this.x += this.xSpeed * delta;
         this.y += this.ySpeed * delta;
         this.born += delta;
+        
         if (this.born > 1800)
         {
             this.setActive(false);
@@ -69,8 +62,7 @@ var config = {
         }
     }
 });
-    function preload ()
-    {
+    function preload (){
     	this.load.image('puntoinicio', 'assets/inicio.png',
         	{ frameWidth: 66, frameHeight: 60 }
     	);
@@ -78,93 +70,56 @@ var config = {
         this.load.image('cursor', 'assets/cursor.png');
         this.load.image('pelota', 'assets/pelota.png');
     }
-    function create ()
-    {
+    function create (){
     	this.physics.world.setBounds(0, 0, 1600, 1200);
-	    playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
+	    playerBullets = this.physics.add.group({ classType: Pelota, runChildUpdate: true });
 	    var background = this.add.image(800, 600, 'fondo');
-	    player = this.physics.add.sprite(0, 1200, 'puntoinicio');
-	    reticle = this.physics.add.sprite(800, 600, 'cursor');
-	    background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
+	    player = this.physics.add.sprite(800, 600, 'puntoinicio');
+	    elcursor = this.physics.add.sprite(800, 700, 'cursor');
+	    background.setOrigin(0.5, 0.5).setDisplaySize(800, 600);
 	    player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
-	    reticle.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
+	    elcursor.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
 	    this.cameras.main.zoom = 0.3;
-
-
-
-
-	    this.input.on('pointerdown', function (pointer, time, lastFired) {
-	        if (player.active === false)
-	            return;
-
-	        var bullet = playerBullets.get().setActive(true).setVisible(true);
-	        bullet.setCollideWorldBounds = true;
-
-
-	        if (bullet)
-	        {
-	            bullet.fire(player, reticle);
+	    this.input.on('pointerdown', function () {
+	        if (player.active === false){
+                return;
+            }
+	        var pelota = playerBullets.get().setActive(true).setVisible(true);
+            pelota.setCollideWorldBounds = true;
+            //bullet.setCollideWorldBounds = true;
+	        if (pelota){
+                pelota.lanza(player, elcursor);
 	            console.log("inicia la pelota ");
 	        }
 	    }, this);
 	    game.canvas.addEventListener('mousedown', function () {
 	        game.input.mouse.requestPointerLock();
 	    });
-	    this.input.keyboard.on('keydown_Q', function (event) {
-	        if (game.input.mouse.locked)
-	            game.input.mouse.releasePointerLock();
-	    }, 0, this);
 	    this.input.on('pointermove', function (pointer) {
-	        if (this.input.mouse.locked)
-	        {
-	            reticle.x += pointer.movementX;
-	            reticle.y += pointer.movementY;
+	        if (this.input.mouse.locked){
+	            elcursor.x += pointer.movementX;
+	            elcursor.y += pointer.movementY;
 	        }
 	    }, this);
-
     }
-
-
-function constrainVelocity(sprite, maxVelocity)
-{
-    if (!sprite || !sprite.body)
-      return;
-    var angle, currVelocitySqr, vx, vy;
-    vx = sprite.body.velocity.x;
-    vy = sprite.body.velocity.y;
-    currVelocitySqr = vx * vx + vy * vy;
-
-    if (currVelocitySqr > maxVelocity * maxVelocity)
-    {
-        angle = Math.atan2(vy, vx);
-        vx = Math.cos(angle) * maxVelocity;
-        vy = Math.sin(angle) * maxVelocity;
-        sprite.body.velocity.x = vx;
-        sprite.body.velocity.y = vy;
-    }
-}
-function constrainReticle(reticle)
-{
-    var distX = reticle.x-player.x; // X distance between player & reticle
-    var distY = reticle.y-player.y; // Y distance between player & reticle
+function restringirElcursor(elcursor){
+    var distX = elcursor.x-player.x; // X distancia entre player & elcursor
+    var distY = elcursor.y-player.y; // Y distancia entre player & elcursor
     if (distX > 800)
-        reticle.x = player.x+800;
+        elcursor.x = player.x+800;
     else if (distX < -800)
-        reticle.x = player.x-800;
+        elcursor.x = player.x-800;
 
     if (distY > 600)
-        reticle.y = player.y+600;
+        elcursor.y = player.y+600;
     else if (distY < -600)
-        reticle.y = player.y-600;
+        elcursor.y = player.y-600;
 }
-
-function update (time, delta)
-{
-    player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y);
-    reticle.body.velocity.x = player.body.velocity.x;
-    reticle.body.velocity.y = player.body.velocity.y;
-    constrainVelocity(player, 500);
-    constrainReticle(reticle);
+function update (){
+    player.rotation = Phaser.Math.Angle.Between(player.x, player.y, elcursor.x, elcursor.y);
+    elcursor.body.velocity.x = player.body.velocity.x;
+    elcursor.body.velocity.y = player.body.velocity.y;
+    restringirElcursor(elcursor);
 }
 
 
