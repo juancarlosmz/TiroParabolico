@@ -6,7 +6,7 @@ var config = {
         physics: {
             default: 'arcade',
             arcade: {
-                gravity: { y: 0 },
+                gravity: { y: 150 },
                 debug: false
             }
         },
@@ -31,7 +31,7 @@ var config = {
     function Pelota (scene){
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'pelota');
         this.speed = 1;
-        this.born = 0;
+        this.hijo = 0;
         this.direction = 0;
         this.xSpeed = 0;
         this.ySpeed = 0;
@@ -39,6 +39,7 @@ var config = {
     },
     lanza: function (disparo, cursor){
         this.setPosition(disparo.x, disparo.y); 
+        
         this.direction = Math.atan( (cursor.x-this.x) / (cursor.y-this.y));
         if (cursor.y >= this.y){
             this.xSpeed = this.speed*Math.sin(this.direction);
@@ -48,14 +49,14 @@ var config = {
             this.ySpeed = -this.speed*Math.cos(this.direction);
         }
         this.rotation = disparo.rotation;
-        this.born = 0;
+        this.hijo = 0;
     },
     update: function (time, delta){
         this.x += this.xSpeed * delta;
         this.y += this.ySpeed * delta;
-        this.born += delta;
+        this.hijo += delta;
         
-        if (this.born > 1800)
+        if (this.hijo > 1800)
         {
             this.setActive(false);
             this.setVisible(false);
@@ -71,24 +72,28 @@ var config = {
         this.load.image('pelota', 'assets/pelota.png');
     }
     function create (){
-    	this.physics.world.setBounds(0, 0, 1600, 1200);
-	    playerBullets = this.physics.add.group({ classType: Pelota, runChildUpdate: true });
+
+
+        this.physics.world.gravity.y = 300;
+        
+        playerBullets = this.physics.add.group({ classType: Pelota, runChildUpdate: true });
+        
 	    var background = this.add.image(800, 600, 'fondo');
-	    player = this.physics.add.sprite(800, 600, 'puntoinicio');
-	    elcursor = this.physics.add.sprite(800, 700, 'cursor');
-	    background.setOrigin(0.5, 0.5).setDisplaySize(800, 600);
-	    player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
-	    elcursor.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
-	    this.cameras.main.zoom = 0.3;
+	    player = this.physics.add.sprite(0, 600, 'puntoinicio').setGravity(0, -300);
+	    elcursor = this.physics.add.sprite(400, 300, 'cursor').setGravity(0, -300);
+	    background.setOrigin(1, 1).setDisplaySize(800, 600);
+	    elcursor.setOrigin(0, 0).setDisplaySize(25, 25).setCollideWorldBounds(true);
+	    this.cameras.main.zoom = 0.8;
 	    this.input.on('pointerdown', function () {
 	        if (player.active === false){
                 return;
             }
 	        var pelota = playerBullets.get().setActive(true).setVisible(true);
             pelota.setCollideWorldBounds = true;
-            //bullet.setCollideWorldBounds = true;
 	        if (pelota){
+                
                 pelota.lanza(player, elcursor);
+                
 	            console.log("inicia la pelota ");
 	        }
 	    }, this);
@@ -98,7 +103,9 @@ var config = {
 	    this.input.on('pointermove', function (pointer) {
 	        if (this.input.mouse.locked){
 	            elcursor.x += pointer.movementX;
-	            elcursor.y += pointer.movementY;
+                elcursor.y += pointer.movementY;
+                //console.log('mouse en x',elcursor.x);
+                //console.log('mouse en y',elcursor.y);
 	        }
 	    }, this);
     }
