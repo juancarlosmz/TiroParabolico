@@ -50,12 +50,12 @@ var config = {
         }
         this.rotation = disparo.rotation;
         this.hijo = 0;
+
     },
     update: function (time, delta){
         this.x += this.xSpeed * delta;
         this.y += this.ySpeed * delta;
         this.hijo += delta;
-        
         if (this.hijo > 1800)
         {
             this.setActive(false);
@@ -69,18 +69,20 @@ var config = {
     	);
         this.load.image('fondo', 'assets/fondo.jpg');
         this.load.image('cursor', 'assets/cursor.png');
-        this.load.image('pelota', 'assets/pelota.png');
+        this.load.image('pelota', 'assets/pelota.png',
+            { frameWidth: 10, frameHeight: 10 }
+        );
     }
     function create (){
 
 
-        this.physics.world.gravity.y = 300;
+        this.physics.world.gravity.y = 100;
         
         playerBullets = this.physics.add.group({ classType: Pelota, runChildUpdate: true });
         
 	    var background = this.add.image(800, 600, 'fondo');
-	    player = this.physics.add.sprite(0, 600, 'puntoinicio').setGravity(0, -300);
-	    elcursor = this.physics.add.sprite(400, 300, 'cursor').setGravity(0, -300);
+	    player = this.physics.add.sprite(0, 600, 'puntoinicio').setGravity(0, -100);
+	    elcursor = this.physics.add.sprite(400, 300, 'cursor').setGravity(0, -100);
 	    background.setOrigin(1, 1).setDisplaySize(800, 600);
 	    elcursor.setOrigin(0, 0).setDisplaySize(25, 25).setCollideWorldBounds(true);
 	    this.cameras.main.zoom = 0.8;
